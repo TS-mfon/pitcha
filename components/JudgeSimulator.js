@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import LockOverlay from "./LockOverlay";
 
 export default function JudgeSimulator({
@@ -19,6 +19,142 @@ export default function JudgeSimulator({
   const [loadingQuestion, setLoadingQuestion] = useState(false);
   const [loadingScore, setLoadingScore] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Voice Interaction States
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [synthSupported, setSynthSupported] = useState(false);
+  const recognitionRef = useRef(null);
+
+  // Check browser speech capabilities on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        setSpeechSupported(true);
+      }
+      if ("speechSynthesis" in window) {
+        setSynthSupported(true);
+      }
+    }
+
+    return () => {
+      // Clean up any active speech or recognition on unmount
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+      }
+    };
+  }, []);
+
+  // Stop speaking whenever the question or judge changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [selectedJudge, question]);
+
+  // Voice Judge Text-to-Speech handler
+  function handleSpeakText(textToSpeak, judgeId) {
+    if (!synthSupported || !textToSpeak) return;
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+    // Persona-tuned voice attributes
+    if (judgeId === "ada") {
+      utterance.pitch = 1.1;
+      utterance.rate = 1.05; // Quick, sharp technical cadence
+    } else if (judgeId === "tunde") {
+      utterance.pitch = 0.85;
+      utterance.rate = 0.95; // Deep, deliberate business cadence
+    } else {
+      utterance.pitch = 1.2;
+      utterance.rate = 1.0; // Warm, approachable design cadence
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Voice Input Speech-to-Text handler (Microphone for Answer)
+  function handleToggleListening() {
+    if (!speechSupported) {
+      setErrorMessage("Speech recognition is not supported in this browser. Please type your answer.");
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+      }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setErrorMessage("");
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript) {
+          setAnswer((prev) => {
+            // Append cleanly if user already started typing
+            return transcript;
+          });
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        if (event.error === "not-allowed") {
+          setErrorMessage("Microphone permission denied. Please allow microphone access to speak.");
+        }
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error("Error starting speech recognition:", err);
+      setIsListening(false);
+    }
+  }
 
   // Judge personas conforming to DESIGN_SYSTEM.md 5.5
   const judges = [
@@ -307,10 +443,29 @@ export default function JudgeSimulator({
         {question ? (
           <div className="flex flex-col gap-6">
             {/* The Judge's Hard Question */}
-            <div className="bg-pitcha-bg/90 border border-pitcha-border-highlight rounded-xl p-5 shadow-inner">
-              <span className="text-[10px] uppercase font-bold text-pitcha-indigo tracking-widest block mb-1">
-                Question from {currentJudgeConfig.name}:
-              </span>
+            <div className="bg-pitcha-bg/90 border border-pitcha-border-highlight rounded-xl p-5 shadow-inner flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-pitcha-indigo tracking-widest block">
+                  Question from {currentJudgeConfig.name}:
+                </span>
+
+                {/* Voice Judge Read Aloud Button */}
+                {synthSupported && (
+                  <button
+                    type="button"
+                    onClick={() => handleSpeakText(question, currentJudgeConfig.id)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      isSpeaking
+                        ? "bg-pitcha-indigo text-white shadow-glow-indigo animate-pulse"
+                        : "bg-pitcha-elevated hover:bg-slate-700 text-slate-300 hover:text-white border border-pitcha-border"
+                    }`}
+                    title="Listen to Judge speak"
+                  >
+                    <span>{isSpeaking ? "🔊 Playing..." : "🔈 Listen"}</span>
+                  </button>
+                )}
+              </div>
+
               <p className="text-base sm:text-lg text-white font-semibold leading-relaxed">
                 &ldquo;{question}&rdquo;
               </p>
@@ -318,17 +473,53 @@ export default function JudgeSimulator({
 
             {/* Founder Answer Form */}
             <form onSubmit={handleSubmitAnswer} className="flex flex-col gap-3">
-              <label htmlFor="founder-answer" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Your Answer to {currentJudgeConfig.name}
-              </label>
-              <textarea
-                id="founder-answer"
-                rows={3}
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Give a direct, concrete answer without buzzwords..."
-                className="w-full bg-pitcha-elevated/70 border border-pitcha-border rounded-xl p-4 text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none focus:border-pitcha-emerald focus:ring-1 focus:ring-pitcha-emerald/30 resize-none leading-relaxed"
-              />
+              <div className="flex items-center justify-between">
+                <label htmlFor="founder-answer" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Your Answer to {currentJudgeConfig.name}
+                </label>
+
+                {/* Voice Input Button (Speech-to-Text) */}
+                {speechSupported && (
+                  <button
+                    type="button"
+                    onClick={handleToggleListening}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      isListening
+                        ? "bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse shadow-lg"
+                        : "bg-pitcha-elevated hover:bg-slate-700 text-slate-300 hover:text-white border border-pitcha-border"
+                    }`}
+                  >
+                    <span className={isListening ? "animate-ping inline-block w-2 h-2 rounded-full bg-red-400 mr-1" : ""}>
+                      {isListening ? "🎙️ Recording (Tap to Stop)" : "🎙️ Speak Answer"}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              <div className="relative">
+                <textarea
+                  id="founder-answer"
+                  rows={3}
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder={
+                    isListening
+                      ? "Listening to your voice... speak your pitch defense now!"
+                      : "Give a direct, concrete answer without buzzwords..."
+                  }
+                  className={`w-full bg-pitcha-elevated/70 border rounded-xl p-4 text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none resize-none leading-relaxed transition-all ${
+                    isListening
+                      ? "border-red-500/80 ring-2 ring-red-500/30"
+                      : "border-pitcha-border focus:border-pitcha-emerald focus:ring-1 focus:ring-pitcha-emerald/30"
+                  }`}
+                />
+                {isListening && (
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 text-[11px] text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                    <span>Transcribing live speech...</span>
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center justify-between gap-3 pt-1">
                 <button
@@ -398,11 +589,29 @@ export default function JudgeSimulator({
                   </span>
                 </div>
 
-                {/* Judge Feedback Critique */}
-                <div className="bg-pitcha-bg/80 border border-pitcha-border-subtle rounded-xl p-4 sm:p-5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
-                    {currentJudgeConfig.name}&apos;s Brutal Critique:
-                  </span>
+                {/* Judge Feedback Critique with Read Aloud */}
+                <div className="bg-pitcha-bg/80 border border-pitcha-border-subtle rounded-xl p-4 sm:p-5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                      {currentJudgeConfig.name}&apos;s Brutal Critique:
+                    </span>
+
+                    {synthSupported && (
+                      <button
+                        type="button"
+                        onClick={() => handleSpeakText(scoreResult.feedback, currentJudgeConfig.id)}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                          isSpeaking
+                            ? "bg-pitcha-indigo text-white shadow-glow-indigo animate-pulse"
+                            : "bg-pitcha-elevated hover:bg-slate-700 text-slate-300 hover:text-white border border-pitcha-border"
+                        }`}
+                        title="Listen to Critique"
+                      >
+                        <span>{isSpeaking ? "🔊 Playing..." : "🔈 Read Critique"}</span>
+                      </button>
+                    )}
+                  </div>
+
                   <p className="text-sm text-slate-200 leading-relaxed">
                     {scoreResult.feedback}
                   </p>

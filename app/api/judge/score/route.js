@@ -1,6 +1,8 @@
 import { generateJSON } from "@/lib/gemini";
 import { getJudge } from "@/lib/judges";
 
+export const maxDuration = 60;
+
 // POST /api/judge/score
 // Scores the founder's answer to a judge's question and provides critique.
 export async function POST(request) {

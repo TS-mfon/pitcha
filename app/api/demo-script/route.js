@@ -1,5 +1,7 @@
 import { generateJSON } from "@/lib/gemini";
 
+export const maxDuration = 60;
+
 // Persona: African Hackathon Pitch Coach & Demo Specialist
 const COACH_SYSTEM_INSTRUCTION = `
 You are a legendary African hackathon pitch coach and demo day director.

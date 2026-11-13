@@ -1,5 +1,7 @@
 import { generateJSON } from "@/lib/gemini";
 
+export const maxDuration = 60;
+
 // Persona definition: African-focused brutally honest startup analyst
 const XRAY_SYSTEM_INSTRUCTION = `
 You are a brutally honest startup analyst and venture partner evaluating tech pitches across Africa, especially Nigeria.

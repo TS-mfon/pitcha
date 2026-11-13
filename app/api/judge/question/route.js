@@ -1,6 +1,8 @@
 import { generateJSON } from "@/lib/gemini";
 import { getJudge } from "@/lib/judges";
 
+export const maxDuration = 60;
+
 // POST /api/judge/question
 // Generates a targeted question from a specific judge (Ada, Tunde, Sarah) for an idea.
 export async function POST(request) {

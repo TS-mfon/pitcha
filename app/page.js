@@ -22,6 +22,7 @@ export default function Home() {
   // Client state
   const [mounted, setMounted] = useState(false);
   const [idea, setIdea] = useState("");
+  const [market, setMarket] = useState("nigeria");
   const [isPro, setIsPro] = useState(false);
   const [xrayCount, setXrayCount] = useState(0);
   const [judgeCount, setJudgeCount] = useState(0);
@@ -108,7 +109,7 @@ export default function Home() {
       const response = await fetch("/api/xray", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: idea.trim() }),
+        body: JSON.stringify({ idea: idea.trim(), market }),
       });
 
       const data = await response.json();
@@ -203,6 +204,8 @@ export default function Home() {
           isPro={isPro}
           xrayCount={xrayCount}
           onUpgradeClick={handleUpgradeClick}
+          selectedMarket={market}
+          onSelectMarket={setMarket}
         />
 
         {/* Loading Skeletons */}
@@ -228,6 +231,7 @@ export default function Home() {
           onUpgradeClick={handleUpgradeClick}
           savedJudgeData={savedJudgeData}
           onSaveJudgeData={handleSaveJudgeData}
+          market={market}
         />
 
         {/* 4. Second-by-Second Stage Demo Timeline (Pro Only) */}
@@ -237,6 +241,7 @@ export default function Home() {
           onUpgradeClick={handleUpgradeClick}
           savedDemoScript={savedDemoScript}
           onSaveDemoScript={handleSaveDemoScript}
+          market={market}
         />
 
         {/* 5. Hackathon Pricing Cards */}

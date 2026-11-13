@@ -1,5 +1,6 @@
 import { generateJSON } from "@/lib/gemini";
 import { getJudge } from "@/lib/judges";
+import { getMarket } from "@/lib/markets";
 
 export const maxDuration = 60;
 
@@ -18,7 +19,8 @@ export async function POST(request) {
       );
     }
 
-    const { idea, judge } = body || {};
+    const { idea, judge, market: marketId } = body || {};
+    const market = getMarket(marketId);
 
     // 2. Validate idea: reject if missing or under 10 characters
     if (!idea || typeof idea !== "string" || idea.trim().length < 10) {
@@ -45,15 +47,19 @@ export async function POST(request) {
       );
     }
 
-    // 5. Construct prompt for Gemini
+    // 5. Construct prompt for Gemini with market lens
     const prompt = `
 Startup Idea:
 "${idea.trim()}"
 
-As ${judgeConfig.name} (${judgeConfig.role}), ask the founder ONE tough, direct, specific question challenging their idea.
+Target Ecosystem:
+${market.name} (${market.currency})
+Market Realities: ${market.context}
+
+As ${judgeConfig.name} (${judgeConfig.role}) evaluating this idea in the ${market.name} market, ask the founder ONE tough, direct, specific question challenging their idea.
 Requirements:
 - The question must be 1 to 2 sentences maximum.
-- Be specific to this startup idea (do NOT ask a generic question).
+- Be specific to this startup idea and the ${market.name} operating context (do NOT ask a generic question).
 - Speak directly to the founder in your authentic judging voice.
 
 Return ONLY a JSON object with this exact shape:

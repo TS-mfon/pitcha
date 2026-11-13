@@ -1,6 +1,8 @@
 "use client";
 
-// Startup idea input section with character validation, quick pills, and X-Ray trigger
+import { MARKETS } from "@/lib/markets";
+
+// Startup idea input section with character validation, target market selector, quick pills, and X-Ray trigger
 export default function IdeaInput({
   idea,
   setIdea,
@@ -9,17 +11,15 @@ export default function IdeaInput({
   isPro,
   xrayCount,
   onUpgradeClick,
+  selectedMarket = "nigeria",
+  onSelectMarket,
 }) {
   const charCount = (idea || "").trim().length;
   const isTooShort = charCount < 10;
   const isFreeExhausted = !isPro && xrayCount >= 1;
 
-  // Preset prompts tailored for the African startup ecosystem
-  const examplePrompts = [
-    "AI credit scoring for informal market traders in Lagos",
-    "Solar-powered cold storage pay-as-you-go for tomato farmers in Kano",
-    "WhatsApp micro-insurance for motorcycle taxi riders across Africa",
-  ];
+  const currentMarketConfig = MARKETS[selectedMarket] || MARKETS.nigeria;
+  const examplePrompts = currentMarketConfig.examples;
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -32,12 +32,41 @@ export default function IdeaInput({
   }
 
   return (
-    <section className="w-full">
+    <section className="w-full flex flex-col gap-3">
+      {/* Target Ecosystem / Market Selector Pills */}
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-pitcha-surface/80 border border-pitcha-border rounded-xl p-2.5 sm:px-4">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">
+          <span>🎯 Target Market:</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {Object.values(MARKETS).map((m) => {
+            const isSelected = selectedMarket === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onSelectMarket && onSelectMarket(m.id)}
+                className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                  isSelected
+                    ? "bg-pitcha-emerald/20 text-pitcha-emerald border-pitcha-emerald/50 shadow-sm"
+                    : "bg-pitcha-elevated/60 text-slate-400 hover:text-white border-pitcha-border-subtle"
+                }`}
+              >
+                <span>{m.flag}</span>
+                <span>{m.name}</span>
+                <span className="text-[10px] opacity-75 font-mono">({m.currency.split(" ")[0]})</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* Textarea container with African command-center styling */}
         <div className="relative bg-pitcha-surface/90 border border-pitcha-border rounded-2xl p-4 sm:p-5 shadow-2xl transition-all focus-within:border-pitcha-emerald focus-within:ring-2 focus-within:ring-pitcha-emerald/20">
           <label htmlFor="idea-input" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-            Pitch Your Startup or Hackathon Idea
+            Pitch Your Startup or Hackathon Idea ({currentMarketConfig.name} Ecosystem)
           </label>
 
           <textarea

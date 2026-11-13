@@ -1,13 +1,7 @@
 import { generateJSON } from "@/lib/gemini";
+import { getMarket } from "@/lib/markets";
 
 export const maxDuration = 60;
-
-// Persona: African Hackathon Pitch Coach & Demo Specialist
-const COACH_SYSTEM_INSTRUCTION = `
-You are a legendary African hackathon pitch coach and demo day director.
-You coach African founders to win competitive hackathons (like Polar, ETHSafari, TechCabal, YC Africa).
-You specialize in high-energy, second-by-second stage choreography that hooks judges immediately and avoids boring slide reading.
-`;
 
 export async function POST(request) {
   try {
@@ -22,7 +16,8 @@ export async function POST(request) {
       );
     }
 
-    const { idea } = body || {};
+    const { idea, market: marketId } = body || {};
+    const market = getMarket(marketId);
 
     // 2. Validate idea: reject if missing or under 10 characters
     if (!idea || typeof idea !== "string" || idea.trim().length < 10) {
@@ -40,14 +35,22 @@ export async function POST(request) {
       );
     }
 
+    // Persona: Hackathon Pitch Coach & Demo Specialist
+    const coachSystemInstruction = `
+You are a legendary startup pitch coach and demo day director specialized in ${market.name} (${market.currency}).
+You coach founders to win competitive hackathons and demo days (e.g., Polar, YC, Techstars, regional demo competitions).
+Market Realities: ${market.context}.
+You specialize in high-energy, second-by-second stage choreography that hooks judges immediately and avoids boring slide reading.
+`;
+
     // 4. Construct prompt for second-by-second stage demo script
     const prompt = `
-Create a second-by-second, stage-winning live hackathon demo script for this African tech startup idea:
+Create a second-by-second, stage-winning live hackathon demo script for this startup idea in the ${market.name} ecosystem (${market.currency}):
 
 Startup Idea:
 "${idea.trim()}"
 
-Target: A high-impact 3-minute (180 seconds) live hackathon presentation in front of venture capitalists and technical judges in Lagos/Nairobi.
+Target: A high-impact 3-minute (180 seconds) live presentation in front of venture capitalists and technical judges. Localize stories, customer examples, and currency to ${market.name}.
 
 Return ONLY a JSON object with this exact shape:
 {

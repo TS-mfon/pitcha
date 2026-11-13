@@ -30,7 +30,7 @@ This roadmap breaks down the upgrades needed to transform Pitcha into a worldwid
   1. Build `components/TeleprompterModal.js` featuring large high-contrast text, a circular 60-second countdown timer, and smooth auto-scrolling.
   2. Add speed controls (Slow 110 WPM, Normal 130 WPM, Fast 160 WPM).
   3. Add an audio voice recorder (MediaRecorder API) so founders can record, replay, and critique their spoken delivery.
-- **Status**: ⏳ In Progress
+- **Status**: ✅ Completed & Verified
 
 ---
 
@@ -43,7 +43,7 @@ This roadmap breaks down the upgrades needed to transform Pitcha into a worldwid
      - 🇮🇳 India (INR ₹, UPI ecosystem, tier-2 vernacular)
      - 🌎 Global / Silicon Valley (USD $, YC standard, SaaS metrics)
   2. Update API routes (`/api/xray`, `/api/judge/question`, `/api/judge/score`, `/api/demo-script`) to receive `market` and adapt system prompts, currencies, and judge questions accordingly.
-- **Status**: 📋 Pending
+- **Status**: ⏳ In Progress
 
 ---
 

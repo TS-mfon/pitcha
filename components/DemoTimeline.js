@@ -9,6 +9,7 @@ export default function DemoTimeline({
   onUpgradeClick,
   savedDemoScript,
   onSaveDemoScript,
+  market = "nigeria",
 }) {
   const [demoScript, setDemoScript] = useState(savedDemoScript || null);
   const [loading, setLoading] = useState(false);
@@ -71,7 +72,7 @@ export default function DemoTimeline({
       const res = await fetch("/api/demo-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: idea.trim() }),
+        body: JSON.stringify({ idea: idea.trim(), market }),
       });
 
       const data = await res.json();

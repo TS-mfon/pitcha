@@ -1,13 +1,7 @@
 import { generateJSON } from "@/lib/gemini";
+import { getMarket } from "@/lib/markets";
 
 export const maxDuration = 60;
-
-// Persona definition: African-focused brutally honest startup analyst
-const XRAY_SYSTEM_INSTRUCTION = `
-You are a brutally honest startup analyst and venture partner evaluating tech pitches across Africa, especially Nigeria.
-You look past buzzwords and hold founders to local market realities (e.g., Naira volatility, payment friction, infrastructure, purchasing power, customer acquisition in informal markets).
-Be direct, insightful, and constructively critical.
-`;
 
 export async function POST(request) {
   try {
@@ -22,7 +16,8 @@ export async function POST(request) {
       );
     }
 
-    const { idea } = body || {};
+    const { idea, market: marketId } = body || {};
+    const market = getMarket(marketId);
 
     // 2. Validate idea: reject if missing or under 10 characters
     if (!idea || typeof idea !== "string" || idea.trim().length < 10) {
@@ -40,9 +35,17 @@ export async function POST(request) {
       );
     }
 
+    // System instruction tailored to the target market
+    const systemInstruction = `
+You are a brutally honest startup analyst and venture partner evaluating tech pitches in ${market.name} (${market.currency}).
+Context & Realities: ${market.context}.
+Lens: ${market.judgeLens}
+Be direct, insightful, and constructively critical.
+`;
+
     // 4. Construct prompt requiring the exact output JSON structure
     const prompt = `
-Analyze the following startup/hackathon idea with brutal honesty and an African/Nigerian market lens.
+Analyze the following startup/hackathon idea with brutal honesty for the ${market.name} market (${market.currency}).
 
 Startup Idea:
 "${idea.trim()}"
@@ -50,14 +53,14 @@ Startup Idea:
 Return ONLY a JSON object with this exact shape:
 {
   "problemScore": 7, // integer or number between 0 and 10 scoring how painful and urgent the problem is
-  "marketSize": "Realistic market size estimate with local context (e.g. TAM in Naira / USD, number of target SMEs/users)",
+  "marketSize": "Realistic market size estimate in ${market.currency} and USD with local ${market.name} context",
   "competitors": [
-    { "name": "Competitor 1", "gap": "What they miss or where they fail" },
-    { "name": "Competitor 2", "gap": "What they miss or where they fail" }
+    { "name": "Competitor 1", "gap": "What they miss or where they fail in ${market.name}" },
+    { "name": "Competitor 2", "gap": "What they miss or where they fail in ${market.name}" }
   ],
-  "weakness": "The single most fatal flaw, execution risk, or blind spot in this idea",
-  "suggestion": "One concrete pivot or tweak to make this idea 10x stronger in this market",
-  "pitchScript": "A punchy, conversational 60-second spoken pitch script with an African hook",
+  "weakness": "The single most fatal flaw, execution risk, or blind spot in this idea within ${market.name}",
+  "suggestion": "One concrete pivot or tweak to make this idea 10x stronger in ${market.name}",
+  "pitchScript": "A punchy, conversational 60-second spoken pitch script with an authentic ${market.name} hook",
   "slideOutline": [
     { "title": "Problem", "bullets": ["Bullet 1", "Bullet 2"] },
     { "title": "Solution", "bullets": ["Bullet 1", "Bullet 2"] },
@@ -79,7 +82,7 @@ CRITICAL RULES:
 `;
 
     // 5. Call Gemini using shared helper
-    const analysis = await generateJSON(prompt, XRAY_SYSTEM_INSTRUCTION);
+    const analysis = await generateJSON(prompt, systemInstruction);
 
     // 6. Return parsed analysis
     return Response.json(analysis, { status: 200 });

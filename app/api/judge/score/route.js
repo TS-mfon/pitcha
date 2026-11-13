@@ -1,5 +1,6 @@
 import { generateJSON } from "@/lib/gemini";
 import { getJudge } from "@/lib/judges";
+import { getMarket } from "@/lib/markets";
 
 export const maxDuration = 60;
 
@@ -18,7 +19,8 @@ export async function POST(request) {
       );
     }
 
-    const { idea, judge, question, answer } = body || {};
+    const { idea, judge, question, answer, market: marketId } = body || {};
+    const market = getMarket(marketId);
 
     // 2. Validate idea: reject if missing or under 10 characters
     if (!idea || typeof idea !== "string" || idea.trim().length < 10) {
@@ -66,16 +68,20 @@ export async function POST(request) {
 Startup Idea:
 "${idea.trim()}"
 
+Target Ecosystem:
+${market.name} (${market.currency})
+Market Realities: ${market.context}
+
 Your Question as ${judgeConfig.name} (${judgeConfig.role}):
 "${question.trim()}"
 
 Founder's Answer:
 "${answer.trim()}"
 
-Evaluate the founder's answer strictly from your perspective as ${judgeConfig.name} (${judgeConfig.role}).
+Evaluate the founder's answer strictly from your perspective as ${judgeConfig.name} (${judgeConfig.role}) in the ${market.name} market context.
 - Score the answer between 0 and 100 based on realism, technical/business/design depth, and how well it solves your concern.
 - Provide 1 to 3 sentences of honest, constructive feedback in your authentic voice.
-- Provide a "betterAnswer": 1 to 2 sentences demonstrating what a world-class, punchy founder answer to your question looks like.
+- Provide a "betterAnswer": 1 to 2 sentences demonstrating what a world-class, punchy founder answer to your question looks like for the ${market.name} ecosystem.
 
 Return ONLY a JSON object with this exact shape:
 {

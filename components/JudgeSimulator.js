@@ -11,6 +11,7 @@ export default function JudgeSimulator({
   onUpgradeClick,
   savedJudgeData,
   onSaveJudgeData,
+  market = "nigeria",
 }) {
   const [selectedJudge, setSelectedJudge] = useState("ada");
   const [question, setQuestion] = useState(savedJudgeData?.question || "");
@@ -216,7 +217,7 @@ export default function JudgeSimulator({
       const res = await fetch("/api/judge/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: idea.trim(), judge: selectedJudge }),
+        body: JSON.stringify({ idea: idea.trim(), judge: selectedJudge, market }),
       });
 
       const data = await res.json();
@@ -260,6 +261,7 @@ export default function JudgeSimulator({
           judge: selectedJudge,
           question: question.trim(),
           answer: answer.trim(),
+          market,
         }),
       });
 

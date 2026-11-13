@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProblemScoreGauge from "./ProblemScoreGauge";
+import DeckPresenter from "./DeckPresenter";
 import { generateDeckPDF } from "@/lib/deckPdf";
 
 // Displays the complete Idea X-Ray analysis
@@ -15,6 +16,7 @@ export default function XRayResults({
   const [copied, setCopied] = useState(false);
   const [activeSlide, setActiveSlide] = useState(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [isPresenting, setIsPresenting] = useState(false);
 
   if (!data) return null;
 
@@ -205,10 +207,21 @@ export default function XRayResults({
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
               <span className="text-xs font-mono font-bold bg-pitcha-emerald/15 text-pitcha-emerald border border-pitcha-emerald/30 px-2.5 py-1 rounded-full">
                 {slideOutline.length} Slides
               </span>
+
+              {/* Present Deck Live Button */}
+              <button
+                type="button"
+                onClick={() => setIsPresenting(true)}
+                className="text-xs font-bold px-3 py-2 rounded-xl bg-pitcha-indigo/20 hover:bg-pitcha-indigo text-pitcha-indigo hover:text-white border border-pitcha-indigo/40 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                title="Open full-screen presentation mode"
+              >
+                <span>🖥️</span>
+                <span>Present Deck</span>
+              </button>
 
               {/* Download Deck PDF Button (Pro Only) */}
               <button
@@ -280,6 +293,17 @@ export default function XRayResults({
             })}
           </div>
         </div>
+      )}
+
+      {/* Full-Screen Live Deck Presenter Mode */}
+      {isPresenting && (
+        <DeckPresenter
+          slides={slideOutline}
+          idea={idea || "Startup Pitch"}
+          marketSize={marketSize}
+          pitchScript={pitchScript}
+          onClose={() => setIsPresenting(false)}
+        />
       )}
     </section>
   );

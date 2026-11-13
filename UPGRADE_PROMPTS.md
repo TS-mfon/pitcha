@@ -10,7 +10,7 @@ This roadmap breaks down the upgrades needed to transform Pitcha into a worldwid
   1. Add browser-native speech-to-text (`webkitSpeechRecognition` / `SpeechRecognition`) to `JudgeSimulator.js` with a pulsing microphone button and live transcript insertion into the answer textarea.
   2. Add text-to-speech (`window.speechSynthesis`) with audio speaker icons next to judge questions and critiques so users can hear Ada, Tunde, and Sarah "speak" their feedback.
   3. Include graceful fallback badges if microphone or audio is unavailable or denied.
-- **Status**: ⏳ In Progress
+- **Status**: ✅ Completed & Verified
 
 ---
 
@@ -20,7 +20,7 @@ This roadmap breaks down the upgrades needed to transform Pitcha into a worldwid
   1. Build `components/DeckPresenter.js` with full-screen presentation mode, slide carousel, and keyboard controls (`←`, `→`, `Escape`).
   2. Include a collapsible "Speaker Notes" drawer showing the slide's pitch talking points.
   3. Add a "Present Deck" button to `XRayResults.js` next to "Download Deck PDF".
-- **Status**: 📋 Pending
+- **Status**: ⏳ In Progress
 
 ---
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ProblemScoreGauge from "./ProblemScoreGauge";
 import DeckPresenter from "./DeckPresenter";
+import TeleprompterModal from "./TeleprompterModal";
 import { generateDeckPDF } from "@/lib/deckPdf";
 
 // Displays the complete Idea X-Ray analysis
@@ -17,6 +18,7 @@ export default function XRayResults({
   const [activeSlide, setActiveSlide] = useState(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [isPresenting, setIsPresenting] = useState(false);
+  const [isPrompterOpen, setIsPrompterOpen] = useState(false);
 
   if (!data) return null;
 
@@ -174,15 +176,26 @@ export default function XRayResults({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-mono bg-pitcha-elevated text-slate-300 px-2.5 py-1 rounded-lg border border-pitcha-border-subtle">
               ⏱️ ~60s | {pitchScript.split(" ").length} words
             </span>
+
+            {/* Launch Teleprompter Studio */}
+            <button
+              type="button"
+              onClick={() => setIsPrompterOpen(true)}
+              className="text-xs font-bold bg-pitcha-indigo hover:bg-indigo-600 text-white shadow-glow-indigo px-3 py-1.5 rounded-xl transition active:scale-95 flex items-center gap-1.5"
+            >
+              <span>🚀</span>
+              <span>Launch Teleprompter</span>
+            </button>
+
             <button
               onClick={handleCopyScript}
               className="text-xs font-bold bg-pitcha-elevated hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl border border-pitcha-border transition active:scale-95 flex items-center gap-1.5"
             >
-              <span>{copied ? "✓ Copied!" : "📋 Copy Script"}</span>
+              <span>{copied ? "✓ Copied!" : "📋 Copy"}</span>
             </button>
           </div>
         </div>
@@ -303,6 +316,15 @@ export default function XRayResults({
           marketSize={marketSize}
           pitchScript={pitchScript}
           onClose={() => setIsPresenting(false)}
+        />
+      )}
+
+      {/* 60-Second Auto-Scrolling Teleprompter Studio */}
+      {isPrompterOpen && (
+        <TeleprompterModal
+          script={pitchScript}
+          idea={idea || "Startup Pitch"}
+          onClose={() => setIsPrompterOpen(false)}
         />
       )}
     </section>

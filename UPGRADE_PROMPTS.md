@@ -20,7 +20,7 @@ This roadmap breaks down the upgrades needed to transform Pitcha into a worldwid
   1. Build `components/DeckPresenter.js` with full-screen presentation mode, slide carousel, and keyboard controls (`←`, `→`, `Escape`).
   2. Include a collapsible "Speaker Notes" drawer showing the slide's pitch talking points.
   3. Add a "Present Deck" button to `XRayResults.js` next to "Download Deck PDF".
-- **Status**: ⏳ In Progress
+- **Status**: ✅ Completed & Verified
 
 ---
 
@@ -30,7 +30,7 @@ This roadmap breaks down the upgrades needed to transform Pitcha into a worldwid
   1. Build `components/TeleprompterModal.js` featuring large high-contrast text, a circular 60-second countdown timer, and smooth auto-scrolling.
   2. Add speed controls (Slow 110 WPM, Normal 130 WPM, Fast 160 WPM).
   3. Add an audio voice recorder (MediaRecorder API) so founders can record, replay, and critique their spoken delivery.
-- **Status**: 📋 Pending
+- **Status**: ⏳ In Progress
 
 ---
 
